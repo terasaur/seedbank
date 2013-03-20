@@ -1,0 +1,6 @@
+[submodule "src/terasaur"]
+	path = src/terasaur
+	url = https://github.com/terasaur/pyterasaur.git
+[submodule "upstream"]
+	path = upstream
+	url = https://github.com/terasaur/pyupstream.git
