@@ -1,0 +1,108 @@
+import python ;
+
+use-project /torrent : ../.. ;
+
+lib boost_python : : <target-os>darwin <name>boost_python-mt $(boost-library-search-path) ;
+lib boost_python : : <name>boost_python ;
+# seed bank -- begin mod
+lib boost_thread : : <name>boost_thread-mt ;
+lib boost_system : : <name>boost_system ;
+lib boost_filesystem : : <name>boost_filesystem ;
+lib mongoclient : : <name>mongoclient ;
+# seed bank -- end mod
+
+rule libtorrent_linking ( properties * )
+{
+    local result ;
+
+    if <toolset>gcc in $(properties)
+    {
+        result += <fpic>on ;
+    }
+
+    if <toolset>gcc in $(properties)
+        || <toolset>darwin in $(properties)
+        || <toolset>clang in $(properties)
+    {
+        result += <cxxflags>-fvisibility=hidden ;
+    }
+
+    if <boost>source in $(properties)
+    {
+        if <boost-link>static in $(properties) || <link>static in $(properties)
+        {
+            result += <library>/boost/python//boost_python/<link>static ;
+            result += <library>/torrent//torrent/<link>static ;
+        }
+        else
+        {
+            result += <library>/boost/python//boost_python/<link>shared ;
+            result += <library>/torrent//torrent/<link>shared/<boost-link>shared ;
+        }
+    }
+    else
+    {
+        result += <library>boost_python ;
+        # seed bank -- begin/end mod -- removed line here
+    }
+
+    # seed bank -- begin mod
+    if <boost>system in $(properties) && <link>shared in $(properties)
+    {
+        result += <library>boost_system/<link>shared
+            <library>boost_thread/<link>shared
+            <library>boost_filesystem/<link>shared
+            ;
+    }
+
+    if <boost-link>static in $(properties)
+    {
+        result += <library>/torrent//torrent/<link>static <boost-link>static ;
+    }
+    else
+    {
+        result += <library>/torrent//torrent/<link>static <boost-link>shared ;
+    }
+
+    if <mongo-link>static in $(properties)
+    {
+        result += <library>mongoclient ;
+    }
+    else
+    {
+        result += <library>mongoclient <link>shared ;
+    }
+    # seed bank -- end mod
+
+    return $(result) ;
+}
+
+python-extension libtorrent
+  : src/module.cpp
+    src/big_number.cpp
+    src/converters.cpp
+    src/create_torrent.cpp
+    src/fingerprint.cpp
+    src/utility.cpp
+    src/session.cpp
+    src/entry.cpp
+    src/torrent_info.cpp
+    src/torrent_handle.cpp
+    src/torrent_status.cpp
+    src/session_settings.cpp
+    src/version.cpp
+    src/alert.cpp
+    src/datetime.cpp
+    src/torrent.cpp
+    src/peer_info.cpp
+    src/ip_filter.cpp
+    src/magnet_uri.cpp
+    src/error_code.cpp
+  : <include>src
+    <conditional>@libtorrent_linking
+  : 
+    <boost-link>static
+  ;
+
+install stage_module : libtorrent : <location>. ;
+

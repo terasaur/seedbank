@@ -1,0 +1,46 @@
+[main]
+#torrent_file_root = /var/lib/seedbank/torrents
+#listen_address = 0.0.0.0
+#listen_port = 6881
+#error_log = /var/log/seedbank/log/error.log
+#log_level = info
+
+# Seconds a torrent may remain inactive before being removed
+# from the libtorrent session
+#inactive_torrent_timeout = 60
+
+# Interval in seconds for running torrent manager tasks
+#torrent_manager_exec_interval = 5
+
+# Path to uploaded torrent data
+#data_volume_root = /var/lib/seedbank/data
+
+# hack until we have identity keys and message validation
+terasaur_seedbank_id =
+
+[upload]
+#allow_upload = False
+# Upload port min and max sets the range for upload listeners
+#upload_port_min = 6882
+#upload_port_max = 6900
+# Timeout in seconds for idle uploads
+#torrent_timeout = 300
+
+[mongodb]
+#db_host = localhost
+#db_port = 27017
+#db_user =
+#db_pass =
+#db_name = seedbank
+
+[message_queue]
+#host = localhost
+#port = 5672
+#user = terasaur
+#pass = terasaur
+#vhost = /terasaur
+#exchange = terasaur
+#control_queue = seedbank.control
+#stats_queue = seedbank.stats
+#terasaur_queue = terasaur.web
+

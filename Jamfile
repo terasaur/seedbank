@@ -1,0 +1,42 @@
+
+import modules ;
+import os ;
+
+LIBTORRENT_ROOT = [ modules.peek : LIBTORRENT_ROOT ] ;
+BOOST_ROOT = [ modules.peek : BOOST_ROOT ] ;
+CXXFLAGS = [ modules.peek : CXXFLAGS ] ;
+LDFLAGS = [ modules.peek : LDFLAGS ] ;
+
+LIBTORRENT_INCLUDE = $(LIBTORRENT_ROOT)/include ;
+LIBTORRENT_LIB = $(LIBTORRENT_ROOT)/bin/gcc-4.1.2/debug/boost-source/fpic-on/need-librt-yes/threading-multi ;
+
+ECHO "LIBTORRENT_ROOT =" $(LIBTORRENT_ROOT) ;
+ECHO "LIBTORRENT_INCLUDE =" $(LIBTORRENT_INCLUDE) ;
+ECHO "LIBTORRENT_LIB =" $(LIBTORRENT_LIB) ;
+ECHO "BOOST_ROOT =" $(BOOST_ROOT) ;
+ECHO "CXXFLAGS =" $(CXXFLAGS) ;
+ECHO "LDFLAGS =" $(LDFLAGS) ;
+ECHO "OS =" [ os.name ] ;
+
+use-project /torrent : $(LIBTORRENT_ROOT) ;
+if $(BOOST_ROOT)
+{
+        use-project /boost : $(BOOST_ROOT) ;
+}
+
+VERSION = 2.0-SNAPSHOT ;
+
+lib torrent : : <name>torrent <include>$(LIBTORRENT_INCLUDE) <search>$(LIBTORRENT_LIB) ;
+lib boost_system : : <name>boost_system <include>$(BOOST_ROOT) <search>$(BOOST_ROOT)/stage/lib ;
+lib boost_filesystem : : <name>boost_filesystem <include>$(BOOST_ROOT) <search>$(BOOST_ROOT)/stage/lib ;
+
+#project simple_client
+#   : requirements
+#        <threading>multi <library>/torrent//torrent
+#        <library>/boost/system//boost_system
+#        <library>/boost/filesystem//boost_filesystem
+#        : default-build
+#        <link>static
+#   ;
+
+#exe simple_client : src/simple_client.cpp ;

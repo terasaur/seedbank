@@ -1,0 +1,118 @@
+#!/bin/bash
+#
+# terasaur seedbank init script
+#
+# Author: John Reuning <john@ibiblio.org>
+#
+# chkconfig: 345 98 02
+# description: terasaur seedbank init script
+#
+# processname: /usr/local/seedbank/bin/seedbank
+# config: /usr/local/seedbank/conf/seedbank.conf
+
+# source function library
+. /etc/init.d/functions
+
+BASEDIR="/usr/local/seedbank"
+CONFIG=$BASEDIR/conf/seedbank.conf
+OPTIONS="--config $CONFIG"
+EXECPATH=$BASEDIR/bin
+PROG="seedbank"
+RUNAS_USER="seedbank"
+PYTHON_COMMAND="/usr/bin/python2.6 -OO"
+PIDFILE="/var/run/$PROG.pid"
+LOCKFILE="/var/lock/subsys/$PROG"
+LOGFILE="$BASEDIR/log/console.log"
+
+if [ ! -f $CONFIG ]; then
+    echo "Missing config file: $CONFIG"
+    exit 1
+fi
+RETVAL=0
+
+start() {
+    echo -n $"Starting $PROG: "
+    if [ -e $LOCKFILE ]; then
+        echo "Already running"
+        return 1
+    fi
+
+    if [ $UID -ne 0 ]; then
+        RETVAL=1
+        failure
+    else
+        daemon --user $RUNAS_USER "$PYTHON_COMMAND $EXECPATH/$PROG $OPTIONS >> $LOGFILE 2>&1 &"
+        RETVAL=$?
+        if [ $RETVAL -eq 0 ]; then
+            PID=`ps -ef |grep $EXECPATH/$PROG |grep -v grep |awk '{print $2}'`
+            if [ ! -z "$PID" ]; then
+                touch $LOCKFILE
+                echo $PID > $PIDFILE
+                success
+            else
+                failure
+            fi
+        fi
+    fi;
+    echo
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $PROG: "
+    if [ $UID -ne 0 ]; then
+        RETVAL=1
+        failure
+    else
+        killproc -p "$PIDFILE" $EXECPATH/$PROG
+        RETVAL=$?
+        [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
+    fi;
+    echo
+    return $RETVAL
+}
+
+reload(){
+    echo -n $"Reloading $PROG: "
+    killproc -p "$PIDFILE" $EXECPATH/$PROG -HUP
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
+restart(){
+    stop
+    start
+}
+
+condrestart(){
+    [ -e $LOCKFILE ] && restart
+    return 0
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    reload)
+        reload
+        ;;
+    condrestart)
+        condrestart
+        ;;
+    status)
+        status $PROG
+        RETVAL=$?
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|reload}"
+        RETVAL=1
+esac
+
+exit $RETVAL
